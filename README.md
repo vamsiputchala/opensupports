@@ -159,10 +159,109 @@ Create a new file called deploy.yml in that directory.
 
 ![deploy yml](https://github.com/user-attachments/assets/003452af-7b37-43bf-a4e7-07a2e6bf072e)
 
+## CI/CD Pipeline for OpenSupports
+This repository uses GitHub Actions to automate the deployment of infrastructure for OpenSupports across three environments: Development, Staging, and Production. The pipeline leverages Terraform for infrastructure as code and AWS for cloud resources.
+
+## Workflow Overview
+The workflow is defined in .github/workflows/main.yml and triggers on pushes to the main branch. It includes three deployment stages that run sequentially:
+
+- Development: Deploys changes to the Development environment.
+- Staging: Deploys to Staging after Development deployment succeeds.
+- Production: Deploys to Production after successful Staging deployment.
 
 
+## Requirements
+## GitHub Secrets
+To manage sensitive data securely, the pipeline relies on GitHub Secrets. Add the following secrets to your repository:
 
+- AWS_ACCESS_KEY_ID: AWS access key for a user with sufficient permissions to manage resources.
+- AWS_SECRET_ACCESS_KEY: Secret access key associated with the above user.
+## AWS Configuration
+Make sure your AWS IAM user has permissions to deploy resources in the targeted region (e.g., us-west-2). You may need policies like AmazonEC2FullAccess, AmazonS3FullAccess, or others depending on your infrastructure requirements.
 
+## Workflow Steps
+Below is a breakdown of each job in the workflow:
+  
+## 1. Development Deployment
+This job checks out the code, configures AWS credentials, installs Terraform, and then applies the Terraform configuration to deploy the infrastructure to the Development environment.
+```
+deploy-dev:
+  runs-on: ubuntu-latest
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v2
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Deploy to Development
+      run: terraform apply -auto-approve -var="environment=development"
+```
+## 2. Staging Deployment
+After the Development deployment completes successfully, the Staging deployment runs. It follows the same steps as Development but specifies the staging environment.
+```
+deploy-staging:
+  runs-on: ubuntu-latest
+  needs: deploy-dev
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v2
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Deploy to Staging
+      run: terraform apply -auto-approve -var="environment=staging"
+```
+## 3. Production Deployment
+Once the Staging deployment completes successfully, the Production deployment job is triggered. It deploys the infrastructure to the Production environment.
+```
+deploy-prod:
+  runs-on: ubuntu-latest
+  needs: deploy-staging
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v2
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Deploy to Production
+      run: terraform apply -auto-approve -var="environment=production"
+```
+## Security Best Practices
+- Secrets Management: Keep sensitive credentials like AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in GitHub Secrets.
+- Terraform auto-approve: For production, consider removing -auto-approve to enforce manual approvals.
 ## Explanation of the Workflow:
 
 GitHub Events: The pipeline triggers when changes are pushed to main, staging, or development branches.

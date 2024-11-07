@@ -154,20 +154,115 @@ Create a new file called deploy.yml in that directory.
 
 ![deploy yml](https://github.com/user-attachments/assets/003452af-7b37-43bf-a4e7-07a2e6bf072e)
 
+```
+name: CI/CD Pipeline for OpenSupports
+
+# Trigger on push to the main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Step 1: Deploy to the Development environment
+  deploy-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step to configure AWS credentials using secrets
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      # Install Terraform
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      # Initialize Terraform in the development environment
+      - name: Terraform Init
+        run: terraform init
+
+      # Deploy infrastructure to the development environment
+      - name: Deploy to Development
+        run: terraform apply -auto-approve -var="environment=development"
+
+  # Step 2: Deploy to Staging after successful dev deployment
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: deploy-dev  # This ensures staging runs after development
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+
+      # Deploy infrastructure to the staging environment
+      - name: Deploy to Staging
+        run: terraform apply -auto-approve -var="environment=staging"
+
+  # Step 3: Deploy to Production after successful staging deployment
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: deploy-staging  # This ensures production runs after staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+
+      # Deploy infrastructure to the production environment
+      - name: Deploy to Production
+        run: terraform apply -auto-approve -var="environment=production"
+
+```
+
+## Workflow Documentation
+## Overview
+This workflow is triggered when a push is made to the main branch in the GitHub repository. It defines three separate jobs to deploy infrastructure in different environments: Development, Staging, and Production. Each environment deployment is set up to run in sequence, so production deployment only happens if staging is successful, and staging only happens if development is successful.
 
 
 
+## Explanation of the Workflow:
+- GitHub Events: The pipeline triggers when changes are pushed to main, staging, or development branches.
+- Global Environment Variables: AWS credentials are securely accessed using ${{ secrets.AWS_ACCESS_KEY_ID }} and ${{ secrets.AWS_SECRET_ACCESS_KEY }}.
+- Dynamic Environment: The TF_VAR_environment variable is dynamically set based on the branch (main, staging, or development).
 
-Explanation of the Workflow:
-GitHub Events: The pipeline triggers when changes are pushed to main, staging, or development branches.
-Global Environment Variables: AWS credentials are securely accessed using ${{ secrets.AWS_ACCESS_KEY_ID }} and ${{ secrets.AWS_SECRET_ACCESS_KEY }}.
-Dynamic Environment: The TF_VAR_environment variable is dynamically set based on the branch (main, staging, or development).
+
+
 Steps:
-Checkout the repository to access the latest code.
-Set up Terraform using hashicorp/setup-terraform@v1.
-Initialize Terraform with terraform init.
-Terraform Plan checks the changes that will be applied.
-Terraform Apply applies the changes automatically.
+
+- Checkout the repository to access the latest code.
+- Set up Terraform using hashicorp/setup-terraform@v1.
+- Initialize Terraform with terraform init.
+- Terraform Plan checks the changes that will be applied.
+- Terraform Apply applies the changes automatically.
 
 
 
@@ -175,12 +270,12 @@ Terraform Apply applies the changes automatically.
 
 
 
-Pipeline Flow
-On any push to the main branch:
-The application will first be deployed to the development environment.
-After successful deployment, the pipeline automatically promotes the application to the staging environment.
-Once staging is verified, the pipeline promotes the application to production.
-This pipeline sets up an automated workflow for deploying OpenSupports to AWS across multiple environments, ensuring smooth transitions between dev, staging, and production. Let me know if you need more help with setting up specific steps.
+## Pipeline Flow
+## On any push to the main branch:
+- The application will first be deployed to the development environment.
+- After successful deployment, the pipeline automatically promotes the application to the staging environment.
+- Once staging is verified, the pipeline promotes the application to production.
+- This pipeline sets up an automated workflow for deploying OpenSupports to AWS across multiple environments, ensuring smooth transitions between dev, staging, and production. 
 
 
 
@@ -189,22 +284,29 @@ This pipeline sets up an automated workflow for deploying OpenSupports to AWS ac
 
 
 
-Best Practices for Security and Cost Optimization
-Security:
-Sensitive Data Management:
+## Best Practices for Security and Cost Optimization
+## Security:
+## Sensitive Data Management:
 
-Store sensitive information such as RDS database credentials, API keys, and access tokens securely using AWS Secrets Manager or AWS Systems Manager Parameter Store.
-Ensure that these secrets are accessed only by necessary resources (e.g., EC2 instances) and are encrypted using AWS KMS (Key Management Service).
-IAM Roles and Policies:
+- Store sensitive information such as RDS database credentials, API keys, and access tokens securely using AWS Secrets Manager or AWS Systems Manager Parameter 
+  Store.
+- Ensure that these secrets are accessed only by necessary resources (e.g., EC2 instances) and are encrypted using AWS KMS (Key Management Service).
 
-Follow the principle of least privilege by creating restrictive IAM policies that only allow resources to access what is required for their specific functionality. Avoid using overly permissive policies (e.g., AdministratorAccess).
-Use IAM Roles to provide EC2 instances with temporary credentials to access other AWS services like S3 and RDS, instead of embedding long-term access keys in code.
-Data Encryption:
+## IAM Roles and Policies:
 
-Enable encryption at rest for both EC2 and RDS resources. For RDS, ensure the database storage is encrypted using AWS-managed keys in KMS. Similarly, encrypt EBS volumes attached to EC2 instances.
-Use encryption in transit (SSL/TLS) for all connections between EC2 instances and the RDS database, and when accessing S3.
-Network Security:
+- Follow the principle of least privilege by creating restrictive IAM policies that only allow resources to access what is required for their specific functionality. Avoid using overly permissive policies (e.g., AdministratorAccess).
+- Use IAM Roles to provide EC2 instances with temporary credentials to access other AWS services like S3 and RDS, instead of embedding long-term access keys in 
+  code.
 
-Utilize security groups to control inbound and outbound traffic for EC2 instances, allowing only the necessary ports and IP ranges (e.g., restrict SSH access to your IP and allow only required ports like HTTP/HTTPS).
-Consider setting up VPC Peering or AWS Transit Gateway to securely interconnect environments, and use NAT Gateways for internet access in private subnets.
-Enable VPC Flow Logs to monitor network traffic for suspicious activity.
+## Data Encryption:
+
+- Enable encryption at rest for both EC2 and RDS resources. For RDS, ensure the database storage is encrypted using AWS-managed keys in KMS. Similarly, encrypt 
+  EBS volumes attached to EC2 instances.
+- Use encryption in transit (SSL/TLS) for all connections between EC2 instances and the RDS database, and when accessing S3.
+  
+## Network Security:
+
+- Utilize security groups to control inbound and outbound traffic for EC2 instances, allowing only the necessary ports and IP ranges (e.g., restrict SSH access to 
+  your IP and allow only required ports like HTTP/HTTPS).
+- Consider setting up VPC Peering or AWS Transit Gateway to securely interconnect environments, and use NAT Gateways for internet access in private subnets.
+- Enable VPC Flow Logs to monitor network traffic for suspicious activity.

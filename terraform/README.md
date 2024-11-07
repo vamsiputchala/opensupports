@@ -1,38 +1,46 @@
-Project Overview
+ ## Project Overview
 
 
 
-This repository contains AWS infrastructure and CI/CD pipeline setup for deploying the OpenSupports application using Terraform. The infrastructure spans across three environments: development, staging, and production, with automation to promote the application between these environments.
+This repository contains AWS infrastructure and CI/CD pipeline setup for deploying the OpenSupports application using Terraform. The infrastructure spans across three environments: 
+- development
+- staging
+-  production
+  
+  with automation to promote the application between these environments.
 
-Prerequisites
+## Prerequisites
 
 
 
-AWS account and access configured credentials.
-Terraform CLI.
-AWS CLI.
-GitHub repository forked from OpenSupports.
-CI/CD tool GitHub Actions configured for automation.
+- AWS account and access configured credentials.
+- Terraform CLI.
+- AWS CLI.
+- GitHub repository forked from OpenSupports.
+- CI/CD tool GitHub Actions configured for automation.
 
 Architecture Overview
 The infrastructure consists of the following AWS components:
 
-EC2 Instances
-RDS (MySQL)
-S3 Buckets
-VPC, Subnets, and Security Groups: Provides network isolation and security.
-IAM Roles and Policies: Ensures least-privilege access for the resources.
-CloudWatch: Logs and monitors the application.
-SNS
+- EC2 Instances
+- RDS (MySQL)
+- S3 Buckets
+- VPC, Subnets, and Security Groups: Provides network isolation and security.
+- IAM Roles and Policies: Ensures least-privilege access for the resources.
+- CloudWatch: Logs and monitors the application.
+- SNS
 
 
 PARAMETERIZED ENVIRONMENTS 
+
+
 ![parameterized](https://github.com/user-attachments/assets/9c21a501-c5b8-462c-b831-7288f9a9ea34)
 
 First, fork the OpenSupports repository 
 
  Infrastructure Setup (Using Terraform)
-Initialize Terraform  terraform init after that based on required environment need to enter into environment folder and pass the command terraform apply -var-file="terraform.tfvars"
+Initialize Terraform with  terraform init after that based on required environment need to enter into environment folder and pass the command
+- terraform apply -var-file="terraform.tfvars"
 
 If using Terraform for infrastructure setup, ensure Terraform is initialized with your AWS provider
 

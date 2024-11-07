@@ -306,34 +306,36 @@ This pipeline sets up an automated workflow for deploying OpenSupports to AWS ac
 
 
 ## Best Practices for Security and Cost Optimization
-Security:
+## Security:
 
-Sensitive Data Management:
-
-
-Store sensitive information such as RDS database credentials, API keys, and access tokens securely using AWS Secrets Manager or AWS Systems Manager Parameter Store.
-
-Ensure that these secrets are accessed only by necessary resources (e.g., EC2 instances) and are encrypted using AWS KMS (Key Management Service).
-
-IAM Roles and Policies:
+## Sensitive Data Management:
 
 
-Follow the principle of least privilege by creating restrictive IAM policies that only allow resources to access what is required for their specific functionality. Avoid using overly permissive policies (e.g., AdministratorAccess).
+- Store sensitive information such as RDS database credentials, API keys, and access tokens securely using AWS Secrets Manager or AWS Systems Manager Parameter Store.
 
-Use IAM Roles to provide EC2 instances with temporary credentials to access other AWS services like S3 and RDS, instead of embedding long-term access keys in code.
+- Ensure that these secrets are accessed only by necessary resources (e.g., EC2 instances) and are encrypted using AWS KMS (Key Management Service).
+
+## IAM Roles and Policies:
 
 
-Data Encryption:
+- Follow the principle of least privilege by creating restrictive IAM policies that only allow resources to access what is required for their specific functionality. Avoid using overly permissive policies (e.g., AdministratorAccess).
 
-Enable encryption at rest for both EC2 and RDS resources. For RDS, ensure the database storage is encrypted using AWS-managed keys in KMS. Similarly, encrypt EBS volumes attached to EC2 instances.
+- Use IAM Roles to provide EC2 instances with temporary credentials to access other AWS services like S3 and RDS, instead of embedding long-term access keys in code.
 
-Use encryption in transit (SSL/TLS) for all connections between EC2 instances and the RDS database, and when accessing S3.
 
-Network Security:
+## Data Encryption:
 
-Utilize security groups to control inbound and outbound traffic for EC2 instances, allowing only the necessary ports and IP ranges (e.g., restrict SSH access to your IP and allow only required ports like HTTP/HTTPS).
+- Enable encryption at rest for both EC2 and RDS resources. For RDS, ensure the database storage is encrypted using AWS-managed keys in KMS. Similarly, encrypt 
+  EBS volumes attached to EC2 instances.
 
-Consider setting up VPC Peering or AWS Transit Gateway to securely interconnect environments, and use NAT Gateways for internet access in private subnets.
+- Use encryption in transit (SSL/TLS) for all connections between EC2 instances and the RDS database, and when accessing S3.
 
-Enable VPC Flow Logs to monitor network traffic for suspicious activity.
+## Network Security:
+
+- Utilize security groups to control inbound and outbound traffic for EC2 instances, allowing only the necessary ports and IP ranges (e.g., restrict SSH access to 
+  your IP and allow only required ports like HTTP/HTTPS).
+
+- Consider setting up VPC Peering or AWS Transit Gateway to securely interconnect environments, and use NAT Gateways for internet access in private subnets.
+
+- Enable VPC Flow Logs to monitor network traffic for suspicious activity.
 
